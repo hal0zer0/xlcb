@@ -1,0 +1,4 @@
+Version='0.0.1'
+Authors=['Josh Price']
+Name='XLCB'
+Description='Exaile compilation builder.'
