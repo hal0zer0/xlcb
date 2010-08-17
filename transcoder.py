@@ -88,7 +88,8 @@ class Transcoder(object):
         print "FORMAT = ", name
         self.dest_format = name
 
-    def set_quality(self, value, FORMATS):
+    def set_quality(self, value):
+        print "VALUE = %f" % value
         if value in self.FORMATS[self.dest_format]['raw_steps']:
             self.quality = value
         else:

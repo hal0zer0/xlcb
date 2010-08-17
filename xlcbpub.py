@@ -12,25 +12,25 @@ class XLCBPublisher:
 
 
   def encode(self):
-    if self.settings["outputFormat"] == "Ogg Vorbis":
-      self.ext = ".ogg"
-    elif self.settings["outputFormat"] == "FLAC":
-      self.ext = ".flac"
-    elif self.settings["outputFormat"] == "copy":
-      pass
-    
     for track in self.playlist:
       source = track["location"]
       dest = self.set_filename(track)
       tc = transcoder.Transcoder(self.logbox_cb, self.FORMATS)
       tc.set_input(source)
       tc.set_output(dest)
+      tc.set_format(self.settings["outputFormat"])
+      try:
+	tc.set_quality(int(self.settings["quality"]))
+      except:
+	tc.set_quality(float(self.settings["quality"]))
       tc.start_transcode(self.settings)
       
   
   def set_filename(self, track):
     #TODO:  Parse the track properly based on options
     path = self.settings["outputDir"]
-    name = "_".join([track["artist"], track["title"]]).replace(" ","_") + self.ext
+    ext = ".%s" % self.settings["outputFormat"]
+    print ext
+    name = "_".join([track["artist"], track["title"]]).replace(" ","_") + "." + self.FORMATS[self.settings["outputFormat"]]["extension"]
     return "/".join([path, name])
     

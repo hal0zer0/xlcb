@@ -58,7 +58,7 @@ class xlcb:
     self.builder.connect_signals(buttonActions)
     
     self.window = self.builder.get_object("window1")
-    self.table = self.builder.get_object("processingTable")
+    self.processingTable = self.builder.get_object("processingTable")
     
     
     #Had to add two ComboBoxes manually, could not get Glade's working
@@ -186,7 +186,7 @@ class xlcb:
   def make_convertBox(self):
     self.convertBox = gtk.combo_box_new_text()
     self.convertBox.connect("changed", self.convertBox_cb)
-    self.table.attach(self.convertBox, 5,9,1,2)
+    self.processingTable.attach(self.convertBox, 5,9,1,2)
     for name in self.formats:
       self.convertBox.append_text(name)
     
@@ -200,24 +200,28 @@ class xlcb:
     #if self.qualityBox: table.remove(qualityBox)
     #self.qualityBox = None
     try:
-      self.table.remove(self.qualityBox)
+      self.processingTable.remove(self.qualityBox)
     except:
       pass
     self.qualityBox = gtk.combo_box_new_text()
     self.qualityBox.connect("changed", self.qbox_cb)
-    self.table.attach(self.qualityBox, 5,9,2,3)
-    self.table.show_all()
+    self.processingTable.attach(self.qualityBox, 5,9,2,3)
+    self.processingTable.show_all()
     
     
   def update_qbox(self, format):
     #if format = "Ogg Vorbis":
     self.make_qbox()
-    data = self.formats[format]["raw_steps"]
+    if format in self.formats:
+      data = self.formats[format]["raw_steps"]
+    else: 
+      data = []
     #for i in range(len(self.qualityBox)):
     #  self.qualityBox.remove_text(i)
     for qvalue in data:
       self.qualityBox.append_text(str(qvalue))
     
+    #self.qualityBox.
     
   def qbox_cb(self, format):
     pass
@@ -245,8 +249,9 @@ class xlcb:
     self.builder.get_object("authorNameEntry").set_text(settingsDict["authorName"])
     self.builder.get_object("outputDirEntry").set_text(settingsDict["outputDir"])
     
+    
     self.update_qbox(settingsDict["outputFormat"])
-
+    #self.qualityBox.
   
   def get_settings_from_exaile(self):
     #Gets last saved settings from Exaile
@@ -257,7 +262,7 @@ class xlcb:
                             "outputDir":        os.path.expanduser('~'),
                             "smartNaming":      True,
                             "outputFormat":     "FLAC",
-                            "quality":          0} 
+                            "quality":          None} 
     pluginSettings = {}
     for settingName in self.defaultSettings:
       optionPath = "/".join(("plugin", self.pluginName, settingName))
@@ -267,15 +272,14 @@ class xlcb:
     return pluginSettings
     
     
-  def save_settings_to_exaile(self):
-    outputFormat = self.convertBox.get_active()    
+  def save_settings_to_exaile(self): 
     #List of setting names and data to save
     toSave = [["albumName", self.builder.get_object("albumNameEntry").get_text()],
               ["albumInFileName",  self.builder.get_object("albumInFileNameCheckbox").get_active()],
               ["authorName", self.builder.get_object("authorNameEntry").get_text()],
               ["outputDir", self.builder.get_object("outputDirEntry").get_text()],
-              ["outputFormat", outputFormat],
-              ["quality", self.quality]]
+              ["outputFormat", self.convertBox.get_active_text()],
+              ["quality", str(self.qualityBox.get_active_text())]]
               
     for setting in toSave:
       #0 is setting name, 1 is the data to be saved
