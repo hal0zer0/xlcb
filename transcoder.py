@@ -46,74 +46,6 @@ from xl.nls import gettext as _
     desc:       a description of the encoder to display to the user
 """
 
-FORMATS = {
-        "Ogg Vorbis" : {
-            "default"   : 0.5,
-            "raw_steps" : [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
-            "kbs_steps" : [64, 80, 96, 112, 128, 160, 192, 224, 256, 320],
-            "command"   : "vorbisenc quality=%s ! oggmux",
-            "extension" : "ogg",
-            "plugins"   : ["vorbisenc", "oggmux"],
-            "desc"      : _("Vorbis is an open source, lossy audio codec with "
-                    "high quality output at a lower file size than MP3.")
-            },
-        "FLAC" : {
-            "default"   : 5,
-            "raw_steps" : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-            "kbs_steps" : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-            "command"   : "flacenc quality=%s",
-            "extension" : "flac",
-            "plugins"   : ["flacenc"],
-            "desc"      : _("Free Lossless Audio Codec (FLAC) is an open "
-                    "source codec that compresses but does not degrade audio "
-                    "quality.")
-            },
-        "AAC"       : {
-            "default"   : 160000,
-            "raw_steps" : [32000, 48000, 64000, 96000, 128000, 160000,
-                    192000, 224000, 256000, 320000],
-            "kbs_steps" : [32, 48, 64, 96, 128, 160, 192, 224, 256, 320],
-            "command"   : "faac bitrate=%s ! ffmux_mp4",
-            "extension" : "m4a",
-            "plugins"   : ["faac", "ffmux_mp4"],
-            "desc"      : _("Apple's proprietary lossy audio format that "
-                    "achieves better sound quality than MP3 at "
-                    "lower bitrates.")
-            },
-        "MP3 (VBR)" : {
-            "default"   : 160,
-            "raw_steps" : [32, 48, 64, 96, 128, 160, 192, 224, 256, 320],
-            "kbs_steps" : [32, 48, 64, 96, 128, 160, 192, 224, 256, 320],
-            "command"   : "lame vbr=4 vbr-mean-bitrate=%s",
-            "extension" : "mp3",
-            "plugins"   : ["lame"],
-            "desc"      : _("A proprietary and older, but also popular, lossy "
-                    "audio format. VBR gives higher quality than CBR, but may "
-                    "be incompatible with some players.")
-            },
-        "MP3 (CBR)" : {
-            "default"   : 160,
-            "raw_steps" : [32, 48, 64, 96, 128, 160, 192, 224, 256, 320],
-            "kbs_steps" : [32, 48, 64, 96, 128, 160, 192, 224, 256, 320],
-            "command"   : "lame bitrate=%s",
-            "extension" : "mp3",
-            "plugins"   : ["lame"],
-            "desc"      : _("A proprietary and older, but also popular, "
-                    "lossy audio format. CBR gives less quality than VBR, "
-                    "but is compatible with any player.")
-            },
-        "WavPack" : {
-            "default"   : 2,
-            "raw_steps" : [1,2,3,4],
-            "kbs_steps" : [1,2,3,4],
-            "command"   : "wavpackenc mode=%s",
-            "extension" : "wv",
-            "plugins"   : ["wavpackenc"],
-            "desc"      : _("A very fast Free lossless audio format with "
-                    "good compression."),
-            },
-        }
-
 # NOTE: the transcoder is NOT designed to transfer tags. You will need to
 # manually write the tags after transcoding has completed.
 
@@ -139,9 +71,9 @@ class TranscodeError(Exception):
     pass
 
 class Transcoder(object):
-    def __init__(self, logbox_cb):
+    def __init__(self, logbox_cb, formats):
         self.logbox_cb = logbox_cb
-        self.quality = 0.5
+        #self.quality = 0.5
         self.sink = None
         self.dest_format = None
         self.encoder = None
@@ -149,20 +81,22 @@ class Transcoder(object):
         self.bus = None
         self.running = False
         self.__last_time = 0.0
-     
+        self.FORMATS = formats
+       
 
     def set_format(self, name):
         print "FORMAT = ", name
-        if name in FORMATS:
-            self.dest_format = name
+        self.dest_format = name
 
-    def set_quality(self, value):
-        if value in FORMATS[self.dest_format]['raw_steps']:
+    def set_quality(self, value, FORMATS):
+        if value in self.FORMATS[self.dest_format]['raw_steps']:
             self.quality = value
+        else:
+	  self.quality = self.FORMATS[self.dest_format]['default']
 
     def _construct_encoder(self):
         self.set_format(self.settings["outputFormat"])
-        fmt = FORMATS[self.dest_format]
+        fmt = self.FORMATS[self.dest_format]
         quality = self.quality
         self.encoder = fmt["command"]%quality
 
@@ -181,8 +115,8 @@ class Transcoder(object):
     def start_transcode(self, settings):
         self.settings = settings
         self._construct_encoder()
-        self.currentTrack = self.output.split("/").pop()
-        self.logbox_cb("Transcoding %s" %self.currentTrack)
+        self.currentTrack = self.output.split("/").pop().strip("\"")
+        #self.logbox_cb("Transcoding %s" %self.currentTrack)
         if not os.path.exists(settings["outputDir"]): 
           os.mkdir(settings["outputDir"])
         
@@ -198,13 +132,14 @@ class Transcoder(object):
 
         pipe.set_state(gst.STATE_PLAYING)
         self.running = True
+        #self.runningCount += 1
         return pipe
 
     def stop(self):
         self.pipe.set_state(gst.STATE_NULL)
         self.running = False
         self.__last_time = 0.0
-        self.logbox_cb("Finished %s" %self.currentTrack)
+        self.logbox_cb("FINISHED: %s" %self.currentTrack)
         
 
     def on_error(self, *args):

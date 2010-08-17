@@ -40,6 +40,9 @@ class xlcb:
     self.MENU_ITEM.connect('activate', self.show_gui, exaile)
     exaile.gui.builder.get_object('tools_menu').append(self.MENU_ITEM)
     self.MENU_ITEM.show()
+    self.finished = 0
+    self.playlist = self.get_playlist()
+    self.formats = self.get_formats()
 
 
   def show_gui(self, unneeded, exaile):
@@ -84,17 +87,102 @@ class xlcb:
     # Called when Begin button clicked.  
     self.save_settings()
     #playlist = self.get_playlist()
-    print "XLCB Build started"
-    print type(arg)
-    pub = xlcbpub.XLCBPublisher(self.get_playlist(), self.get_settings(), self.logbox_cb)
+    self.logbox_cb("XLCB encodes using multiple threads.  Files may finish encoding in an order different than they started.\n\n")
+    
+    pub = xlcbpub.XLCBPublisher(self.playlist, self.get_settings(), self.logbox_cb, self.get_formats())
     #pub.encode()
     
   def logbox_cb(self, text):
     logbox = self.builder.get_object("logBox")
+    # This is an ugly hack for counting the completed items
+    if "FINISHED: " in text:
+      self.finished += 1
+      logbox.get_buffer().insert_at_cursor("%i complete\n" % self.finished )
     logbox.get_buffer().insert_at_cursor(text + "\n")
+
     
-    
-    
+  def get_formats(self):
+    FORMATS = {
+        "Ogg Vorbis" : {
+            "default"   : 0.5,
+            "raw_steps" : [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+            "kbs_steps" : [64, 80, 96, 112, 128, 160, 192, 224, 256, 320],
+            "command"   : "vorbisenc quality=%s ! oggmux",
+            "extension" : "ogg",
+            "plugins"   : ["vorbisenc", "oggmux"],
+            "desc"      : _("Vorbis is an open source, lossy audio codec with "
+                    "high quality output at a lower file size than MP3.")
+            },
+        "FLAC" : {
+            "default"   : 5,
+            "raw_steps" : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+            "kbs_steps" : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+            "command"   : "flacenc quality=%s",
+            "extension" : "flac",
+            "plugins"   : ["flacenc"],
+            "desc"      : _("Free Lossless Audio Codec (FLAC) is an open "
+                    "source codec that compresses but does not degrade audio "
+                    "quality.")
+            },
+        "AAC"       : {
+            "default"   : 160000,
+            "raw_steps" : [32000, 48000, 64000, 96000, 128000, 160000,
+                    192000, 224000, 256000, 320000],
+            "kbs_steps" : [32, 48, 64, 96, 128, 160, 192, 224, 256, 320],
+            "command"   : "faac bitrate=%s ! ffmux_mp4",
+            "extension" : "m4a",
+            "plugins"   : ["faac", "ffmux_mp4"],
+            "desc"      : _("Apple's proprietary lossy audio format that "
+                    "achieves better sound quality than MP3 at "
+                    "lower bitrates.")
+            },
+        "MP3 (VBR)" : {
+            "default"   : 160,
+            "raw_steps" : [32, 48, 64, 96, 128, 160, 192, 224, 256, 320],
+            "kbs_steps" : [32, 48, 64, 96, 128, 160, 192, 224, 256, 320],
+            "command"   : "lame vbr=4 vbr-mean-bitrate=%s",
+            "extension" : "mp3",
+            "plugins"   : ["lame"],
+            "desc"      : _("A proprietary and older, but also popular, lossy "
+                    "audio format. VBR gives higher quality than CBR, but may "
+                    "be incompatible with some players.")
+            },
+        "MP3 (CBR)" : {
+            "default"   : 160,
+            "raw_steps" : [32, 48, 64, 96, 128, 160, 192, 224, 256, 320],
+            "kbs_steps" : [32, 48, 64, 96, 128, 160, 192, 224, 256, 320],
+            "command"   : "lame bitrate=%s",
+            "extension" : "mp3",
+            "plugins"   : ["lame"],
+            "desc"      : _("A proprietary and older, but also popular, "
+                    "lossy audio format. CBR gives less quality than VBR, "
+                    "but is compatible with any player.")
+            },
+        "WavPack" : {
+            "default"   : 2,
+            "raw_steps" : [1,2,3,4],
+            "kbs_steps" : [1,2,3,4],
+            "command"   : "wavpackenc mode=%s",
+            "extension" : "wv",
+            "plugins"   : ["wavpackenc"],
+            "desc"      : _("A very fast Free lossless audio format with "
+                    "good compression."),
+            },
+        }
+    return FORMATS
+
+
+
+
+
+
+
+
+
+
+
+
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Loading and saving user settings
   def populate(self):
@@ -116,10 +204,41 @@ class xlcb:
       oggButton.set_active(True)
     elif settingsDict["outputFormat"] == "FLAC":
       flacButton.set_active(True)
-	
+    
+    self.make_qbox()
+    self.update_qbox(settingsDict["outputFormat"])
     
     
+  def make_qbox(self):
+    table = self.builder.get_object("processingTable")
+    #if self.qualityBox: table.remove(qualityBox)
+    self.qualityBox = gtk.combo_box_new_text()
+    self.qualityBox.connect("changed", self.qbox_cb)
+    table.attach(self.qualityBox, 2,7,3,4)
     
+  def update_qbox(self, format):
+    #if format = "Ogg Vorbis":
+    data = self.formats[format]["raw_steps"]
+    
+    #I can't seem to get my code to interact properly with the Glade
+    # combobox, so I'm making a GTK one manually.  Ugly, 
+    #TODO:  Fix this ridiculous hack
+    #qualityBox = self.builder.get_object("processingTable").qualityBox
+    for thingy in data:
+      self.qualityBox.append_text(str(thingy))
+    
+ 
+
+    #store=gtk.ListStore(str)
+    #for row in data:
+      #print row
+      #store.append([row])
+    
+    #self.builder.get_object("qualityDropdown").set_model(store)
+    
+  def qbox_cb(self, format):
+    self.update_qbox(format)
+  
   def get_settings(self):
     #Gets last saved settings from Exaile
     #                        Name of setting:   default value
@@ -128,7 +247,8 @@ class xlcb:
                             "authorName":       "Unknown",
                             "outputDir":        os.path.expanduser('~'),
                             "smartNaming":      True,
-                            "outputFormat":     "FLAC"}
+                            "outputFormat":     "FLAC",
+                            "quality":          0}
     
     pluginSettings = {}
     for settingName in self.defaultSettings:
@@ -154,7 +274,8 @@ class xlcb:
               ["albumInFileName",  self.builder.get_object("albumInFileNameCheckbox").get_active()],
               ["authorName", self.builder.get_object("authorNameEntry").get_text()],
               ["outputDir", self.builder.get_object("outputDirEntry").get_text()],
-              ["outputFormat", outputFormat]]
+              ["outputFormat", outputFormat],
+              ["quality", self.quality]]
               
     for setting in toSave:
       #0 is setting name, 1 is the data to be saved
