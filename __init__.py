@@ -43,6 +43,7 @@ class xlcb:
     self.finished = 0
     self.playlist = self.get_playlist()
     self.formats = self.get_formats()
+        
 
 
   def show_gui(self, unneeded, exaile):
@@ -57,7 +58,14 @@ class xlcb:
     self.builder.connect_signals(buttonActions)
     
     self.window = self.builder.get_object("window1")
+    self.table = self.builder.get_object("processingTable")
+    
+    
+    #Had to add two ComboBoxes manually, could not get Glade's working
+    self.make_convertBox()
+    self.make_qbox()
     self.populate()
+    
     self.window.show_all()
     gtk.main()
     
@@ -85,11 +93,11 @@ class xlcb:
 
   def startBuilding(self, arg):
     # Called when Begin button clicked.  
-    self.save_settings()
+    self.save_settings_to_exaile()
     #playlist = self.get_playlist()
-    self.logbox_cb("XLCB encodes using multiple threads.  Files may finish encoding in an order different than they started.\n\n")
+    self.logbox_cb(_("XLCB encodes using multiple threads.  Files may finish encoding in an order different than they started.\n\n"))
     
-    pub = xlcbpub.XLCBPublisher(self.playlist, self.get_settings(), self.logbox_cb, self.get_formats())
+    pub = xlcbpub.XLCBPublisher(self.playlist, self.get_settings_from_exaile(), self.logbox_cb, self.get_formats())
     #pub.encode()
     
   def logbox_cb(self, text):
@@ -172,6 +180,49 @@ class xlcb:
     return FORMATS
 
 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# Dealing with the non-Glade ComboBoxes I had to add
+
+  def make_convertBox(self):
+    self.convertBox = gtk.combo_box_new_text()
+    self.convertBox.connect("changed", self.convertBox_cb)
+    self.table.attach(self.convertBox, 5,9,1,2)
+    for name in self.formats:
+      self.convertBox.append_text(name)
+    
+  def convertBox_cb(self, box):
+    format = box.get_active_text()
+    print "ConvertBox CB called, format = %s" % format
+    self.update_qbox(format)
+    
+    
+  def make_qbox(self):
+    #if self.qualityBox: table.remove(qualityBox)
+    #self.qualityBox = None
+    try:
+      self.table.remove(self.qualityBox)
+    except:
+      pass
+    self.qualityBox = gtk.combo_box_new_text()
+    self.qualityBox.connect("changed", self.qbox_cb)
+    self.table.attach(self.qualityBox, 5,9,2,3)
+    self.table.show_all()
+    
+    
+  def update_qbox(self, format):
+    #if format = "Ogg Vorbis":
+    self.make_qbox()
+    data = self.formats[format]["raw_steps"]
+    #for i in range(len(self.qualityBox)):
+    #  self.qualityBox.remove_text(i)
+    for qvalue in data:
+      self.qualityBox.append_text(str(qvalue))
+    
+    
+  def qbox_cb(self, format):
+    pass
+    #self.update_qbox(format)
+  
 
 
 
@@ -187,59 +238,17 @@ class xlcb:
 # Loading and saving user settings
   def populate(self):
     #Set UI elements to match settings pulled from Exaile
-    settingsDict = self.get_settings()
+    settingsDict = self.get_settings_from_exaile()
+    
     self.builder.get_object("albumNameEntry").set_text(settingsDict["albumName"])
     self.builder.get_object("albumInFileNameCheckbox").set_active(settingsDict["albumInFileName"])
     self.builder.get_object("authorNameEntry").set_text(settingsDict["authorName"])
     self.builder.get_object("outputDirEntry").set_text(settingsDict["outputDir"])
     
-    #Get "output format" button status
-    oggButton = self.builder.get_object("convertOggButton")
-    flacButton = self.builder.get_object("convertFlacButton")
-    copyButton = self.builder.get_object("copyOnlyButton")
-    
-    if settingsDict["outputFormat"] == "copy":
-      oggButton.set_active(True)
-    elif settingsDict["outputFormat"] == "Ogg Vorbis":
-      oggButton.set_active(True)
-    elif settingsDict["outputFormat"] == "FLAC":
-      flacButton.set_active(True)
-    
-    self.make_qbox()
     self.update_qbox(settingsDict["outputFormat"])
-    
-    
-  def make_qbox(self):
-    table = self.builder.get_object("processingTable")
-    #if self.qualityBox: table.remove(qualityBox)
-    self.qualityBox = gtk.combo_box_new_text()
-    self.qualityBox.connect("changed", self.qbox_cb)
-    table.attach(self.qualityBox, 2,7,3,4)
-    
-  def update_qbox(self, format):
-    #if format = "Ogg Vorbis":
-    data = self.formats[format]["raw_steps"]
-    
-    #I can't seem to get my code to interact properly with the Glade
-    # combobox, so I'm making a GTK one manually.  Ugly, 
-    #TODO:  Fix this ridiculous hack
-    #qualityBox = self.builder.get_object("processingTable").qualityBox
-    for thingy in data:
-      self.qualityBox.append_text(str(thingy))
-    
- 
 
-    #store=gtk.ListStore(str)
-    #for row in data:
-      #print row
-      #store.append([row])
-    
-    #self.builder.get_object("qualityDropdown").set_model(store)
-    
-  def qbox_cb(self, format):
-    self.update_qbox(format)
   
-  def get_settings(self):
+  def get_settings_from_exaile(self):
     #Gets last saved settings from Exaile
     #                        Name of setting:   default value
     self.defaultSettings = {"albumName":        "XLCB Comp",
@@ -248,8 +257,7 @@ class xlcb:
                             "outputDir":        os.path.expanduser('~'),
                             "smartNaming":      True,
                             "outputFormat":     "FLAC",
-                            "quality":          0}
-    
+                            "quality":          0} 
     pluginSettings = {}
     for settingName in self.defaultSettings:
       optionPath = "/".join(("plugin", self.pluginName, settingName))
@@ -259,16 +267,8 @@ class xlcb:
     return pluginSettings
     
     
-  def save_settings(self):
-    if self.builder.get_object("copyOnlyButton").get_active():
-      outputFormat = "copy"
-    elif self.builder.get_object("convertOggButton").get_active():
-      outputFormat = "Ogg Vorbis"
-    elif self.builder.get_object("convertFlacButton").get_active():
-      outputFormat = "FLAC"
-    else:
-      print "Invalid format: no button shows as active"
-      
+  def save_settings_to_exaile(self):
+    outputFormat = self.convertBox.get_active()    
     #List of setting names and data to save
     toSave = [["albumName", self.builder.get_object("albumNameEntry").get_text()],
               ["albumInFileName",  self.builder.get_object("albumInFileNameCheckbox").get_active()],
