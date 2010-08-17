@@ -42,7 +42,7 @@ class xlcb:
     self.MENU_ITEM.show()
 
 
-  def show_gui(self, something, exaile):
+  def show_gui(self, unneeded, exaile):
     #Load up Glade GUI file
     self.gladefile = os.path.dirname(__file__) + "/xlcbgui.glade"
     self.builder = gtk.Builder()

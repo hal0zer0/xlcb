@@ -23,7 +23,7 @@ class XLCBPublisher:
       #source="/media/AA0C-FA89/Music/Tumbler.mp3"
       #dest="/home/josh/trans-test/tumbler.ogg"
       tc = transcoder.Transcoder()
-      tc.set_format(self.settings["outputFormat"]) # was "Ogg Vorbis"
+      #tc.set_format(self.settings["outputFormat"]) # was "Ogg Vorbis"
       #tc.set_quality(224)
       
       tc.set_input(source)
