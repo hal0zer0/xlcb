@@ -139,7 +139,8 @@ class TranscodeError(Exception):
     pass
 
 class Transcoder(object):
-    def __init__(self):
+    def __init__(self, logbox_cb):
+        self.logbox_cb = logbox_cb
         self.quality = 0.5
         self.sink = None
         self.dest_format = None
@@ -180,7 +181,8 @@ class Transcoder(object):
     def start_transcode(self, settings):
         self.settings = settings
         self._construct_encoder()
-        print "Transcoding..."
+        self.currentTrack = self.output.split("/").pop()
+        self.logbox_cb("Transcoding %s" %self.currentTrack)
         if not os.path.exists(settings["outputDir"]): 
           os.mkdir(settings["outputDir"])
         
@@ -202,7 +204,7 @@ class Transcoder(object):
         self.pipe.set_state(gst.STATE_NULL)
         self.running = False
         self.__last_time = 0.0
-        #self.end_cb()
+        self.logbox_cb("Finished %s" %self.currentTrack)
         
 
     def on_error(self, *args):

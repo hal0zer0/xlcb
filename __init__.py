@@ -86,22 +86,42 @@ class xlcb:
     #playlist = self.get_playlist()
     print "XLCB Build started"
     print type(arg)
-    pub = xlcbpub.XLCBPublisher(self.get_playlist(), self.get_settings())
+    pub = xlcbpub.XLCBPublisher(self.get_playlist(), self.get_settings(), self.logbox_cb)
     #pub.encode()
+    
+  def logbox_cb(self, text):
+    logbox = self.builder.get_object("logBox")
+    logbox.get_buffer().insert_at_cursor(text + "\n")
     
     
     
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Loading and saving user settings
   def populate(self):
+    #Set UI elements to match settings pulled from Exaile
     settingsDict = self.get_settings()
     self.builder.get_object("albumNameEntry").set_text(settingsDict["albumName"])
     self.builder.get_object("albumInFileNameCheckbox").set_active(settingsDict["albumInFileName"])
     self.builder.get_object("authorNameEntry").set_text(settingsDict["authorName"])
     self.builder.get_object("outputDirEntry").set_text(settingsDict["outputDir"])
     
+    #Get "output format" button status
+    oggButton = self.builder.get_object("convertOggButton")
+    flacButton = self.builder.get_object("convertFlacButton")
+    copyButton = self.builder.get_object("copyOnlyButton")
+    
+    if settingsDict["outputFormat"] == "copy":
+      oggButton.set_active(True)
+    elif settingsDict["outputFormat"] == "Ogg Vorbis":
+      oggButton.set_active(True)
+    elif settingsDict["outputFormat"] == "FLAC":
+      flacButton.set_active(True)
+	
+    
+    
     
   def get_settings(self):
+    #Gets last saved settings from Exaile
     #                        Name of setting:   default value
     self.defaultSettings = {"albumName":        "XLCB Comp",
                             "albumInFileName":  False,

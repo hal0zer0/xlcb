@@ -2,14 +2,16 @@
 import transcoder
 
 class XLCBPublisher:
-  def __init__(self, playlist, settings):
+  def __init__(self, playlist, settings, logbox_cb):
     self.playlist = playlist
     self.settings = settings
+    self.logbox_cb = logbox_cb
     self.encode()
+
   
   def encode(self):
     #Settings for the whole transcoding
-    tc = transcoder.Transcoder()
+    #tc = transcoder.Transcoder()
 
 
     
@@ -22,7 +24,7 @@ class XLCBPublisher:
       
       #source="/media/AA0C-FA89/Music/Tumbler.mp3"
       #dest="/home/josh/trans-test/tumbler.ogg"
-      tc = transcoder.Transcoder()
+      tc = transcoder.Transcoder(self.logbox_cb)
       #tc.set_format(self.settings["outputFormat"]) # was "Ogg Vorbis"
       #tc.set_quality(224)
       
@@ -37,3 +39,4 @@ class XLCBPublisher:
     path = self.settings["outputDir"]
     name = "_".join([track["artist"], track["title"], ".ogg"]).replace(" ","_")
     return "/".join([path, name])
+    
