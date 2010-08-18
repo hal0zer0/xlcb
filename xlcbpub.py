@@ -19,6 +19,10 @@ class XLCBPublisher:
       tc.set_input(source)
       tc.set_output(dest)
       tc.set_format(self.settings["outputFormat"])
+      #Some formats use integer quality settings, others use floats.  
+      #Since the quality settings has to be converted to strings for
+      #the comboboxes, I need this try/except to convert back to 
+      #proper numberical format.  
       try:
 	tc.set_quality(int(self.settings["quality"]))
       except:
@@ -28,9 +32,18 @@ class XLCBPublisher:
   
   def set_filename(self, track):
     #TODO:  Parse the track properly based on options
+    nameList = []
     path = self.settings["outputDir"]
-    ext = ".%s" % self.settings["outputFormat"]
-    print ext
-    name = "_".join([track["artist"], track["title"]]).replace(" ","_") + "." + self.FORMATS[self.settings["outputFormat"]]["extension"]
+    ext = self.FORMATS[self.settings["outputFormat"]]["extension"]
+    artist = track["artist"]
+    title = track["title"]
+    delim = "_"
+    nameList.append(artist)
+    if self.settings["albumInFileName"]:
+      nameList.append(self.settings["albumName"])
+    nameList.append(title)
+    name = delim.join(nameList) + ".%s" % ext
+    print "/".join([path, name])
+    
     return "/".join([path, name])
     

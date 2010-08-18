@@ -197,8 +197,6 @@ class xlcb:
     
     
   def make_qbox(self):
-    #if self.qualityBox: table.remove(qualityBox)
-    #self.qualityBox = None
     try:
       self.processingTable.remove(self.qualityBox)
     except:
@@ -210,22 +208,18 @@ class xlcb:
     
     
   def update_qbox(self, format):
-    #if format = "Ogg Vorbis":
     self.make_qbox()
     if format in self.formats:
       data = self.formats[format]["raw_steps"]
     else: 
       data = []
-    #for i in range(len(self.qualityBox)):
-    #  self.qualityBox.remove_text(i)
     for qvalue in data:
       self.qualityBox.append_text(str(qvalue))
     
-    #self.qualityBox.
     
   def qbox_cb(self, format):
     pass
-    #self.update_qbox(format)
+
   
 
 
@@ -283,6 +277,7 @@ class xlcb:
               
     for setting in toSave:
       #0 is setting name, 1 is the data to be saved
+      print "saving setting %s" % setting[0]
       optionPath = "/".join(("plugin", self.pluginName, setting[0]))
       xlsettings.set_option(optionPath, setting[1])
 
