@@ -24,10 +24,16 @@ class XLCBPublisher:
       #Since the quality setting has to be converted to strings for
       #the comboboxes, I need this try/except to convert back to 
       #proper numerical format.  It's pretty ugly.  Improve it =)
-      try:
-	tc.set_quality(int(self.settings["quality"]))
-      except:
-	tc.set_quality(float(self.settings["quality"]))
+      
+      if "." in self.settings["quality"]:
+	print "seems float:", self.settings["quality"]
+      else:
+	print "seems int:", self.settings["quality"]
+      
+      #try:
+	#tc.set_quality(int(self.settings["quality"]))
+      #except:
+	#tc.set_quality(float(self.settings["quality"]))
       tc.start_transcode(self.settings)
       
   

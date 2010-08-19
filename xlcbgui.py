@@ -59,10 +59,10 @@ class XLCBGUI:
     
     
   def _find_index_of(self, whichbox, tofind):
+    #TODO: come up with a more efficient way of finding the index # of this entry
     if whichbox == "format":
       i = 0
       for format in self.formats:
-        #Please, come up with a more efficient way of finding the index # of this entry
         if format == tofind:
 	  return i
         else:
@@ -90,9 +90,6 @@ class XLCBGUI:
 
   
   def _populate_qBox(self):
-    for i in range(len(self.qualityBox.get_model())):
-      self.qualityBox.remove_text(0)
-    #Verify that the selected quality is legitimate
     audioformat = self.config["outputFormat"]
     data = self.formats[audioformat]["raw_steps"]
     #Add items to quality box
@@ -102,9 +99,15 @@ class XLCBGUI:
 
   def _refresh_qBox(self):
     #Clear out existing items from quality box
+    print "refreshing qualities"
     for i in range(len(list(self.qualityBox.get_model()))):
       self.qualityBox.remove_text(0)
-    self._populate_qBox()
+    #self._populate_qBox()
+    audioformat = self.convertBox.get_active_text()
+    data = self.formats[audioformat]["raw_steps"]
+    #Add items to quality box
+    for qvalue in data:
+      self.qualityBox.append_text(str(qvalue))
     
     
   #Callbacks------------------------------------------------------------------
