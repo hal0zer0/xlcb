@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 from xl.nls import gettext as _
-from xl import settings as xlsettings
+#from xl import settings as xlsettings
 from xl import event
-
-import pygtk
 import gtk
-import gtk.glade
 import os
 import datetime
 import xlcbpub
+import xlcbconfig
+import xlcbgui
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Base functions for pluginability
@@ -29,47 +28,25 @@ def _enable(eventname, exaile, nothing):
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Actual plugin code
 class xlcb:
-  
   def __init__(self, exaile):
     # Make basic onformation available to plugin
     self.pluginName = "XLCB"
     self.exaile = exaile
-    
+    self.gui = xlcbgui.XLCBGUI()
     # Add XLCB item to Tools menu
     self.MENU_ITEM = gtk.MenuItem(_('XLCB'))
-    self.MENU_ITEM.connect('activate', self.show_gui, exaile)
+    self.MENU_ITEM.connect('activate', self.gui.show, exaile)
     exaile.gui.builder.get_object('tools_menu').append(self.MENU_ITEM)
     self.MENU_ITEM.show()
+    
+    
     self.finished = 0
     self.playlist = self.get_playlist()
     self.formats = self.get_formats()
+    configObject = xlcbconfig.Config()
+    self.settings = configObject.settings
         
-
-
-  def show_gui(self, unneeded, exaile):
-    #Load up Glade GUI file
-    self.gladefile = os.path.dirname(__file__) + "/xlcbgui.glade"
-    self.builder = gtk.Builder()
-    self.builder.add_from_file(self.gladefile)
-    
-    # Button connections for GUI
-    buttonActions = { "on_beginButton_clicked" : self.startBuilding,
-            "on_MainWindow_destroy" : gtk.main_quit }
-    self.builder.connect_signals(buttonActions)
-    
-    self.window = self.builder.get_object("window1")
-    self.processingTable = self.builder.get_object("processingTable")
-    
-    
-    #Had to add two ComboBoxes manually, could not get Glade's working
-    self.make_convertBox()
-    self.make_qbox()
-    self.populate()
-    
-    self.window.show_all()
-    gtk.main()
-    
-    
+  
   def get_playlist(self):
     # Reads the active playlist and converts to more easily parsed formatted
     # for the publisher
@@ -183,12 +160,7 @@ class xlcb:
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Dealing with the non-Glade ComboBoxes I had to add
 
-  def make_convertBox(self):
-    self.convertBox = gtk.combo_box_new_text()
-    self.convertBox.connect("changed", self.convertBox_cb)
-    self.processingTable.attach(self.convertBox, 5,9,1,2)
-    for name in self.formats:
-      self.convertBox.append_text(name)
+
     
   def convertBox_cb(self, box):
     format = box.get_active_text()
@@ -196,15 +168,7 @@ class xlcb:
     self.update_qbox(format)
     
     
-  def make_qbox(self):
-    try:
-      self.processingTable.remove(self.qualityBox)
-    except:
-      pass
-    self.qualityBox = gtk.combo_box_new_text()
-    self.qualityBox.connect("changed", self.qbox_cb)
-    self.processingTable.attach(self.qualityBox, 5,9,2,3)
-    self.processingTable.show_all()
+
     
     
   def update_qbox(self, format):
@@ -234,52 +198,7 @@ class xlcb:
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Loading and saving user settings
-  def populate(self):
-    #Set UI elements to match settings pulled from Exaile
-    settingsDict = self.get_settings_from_exaile()
-    
-    self.builder.get_object("albumNameEntry").set_text(settingsDict["albumName"])
-    self.builder.get_object("albumInFileNameCheckbox").set_active(settingsDict["albumInFileName"])
-    self.builder.get_object("authorNameEntry").set_text(settingsDict["authorName"])
-    self.builder.get_object("outputDirEntry").set_text(settingsDict["outputDir"])
-    
-    
-    self.update_qbox(settingsDict["outputFormat"])
-    #self.qualityBox.
-  
-  def get_settings_from_exaile(self):
-    #Gets last saved settings from Exaile
-    #                        Name of setting:   default value
-    self.defaultSettings = {"albumName":        "XLCB Comp",
-                            "albumInFileName":  False,
-                            "authorName":       "Unknown",
-                            "outputDir":        os.path.expanduser('~'),
-                            "smartNaming":      True,
-                            "outputFormat":     "FLAC",
-                            "quality":          None} 
-    pluginSettings = {}
-    for settingName in self.defaultSettings:
-      optionPath = "/".join(("plugin", self.pluginName, settingName))
-      # Use Exaile's settings if there, defaults if not
-      pluginSettings[settingName] = xlsettings.get_option(optionPath, self.defaultSettings[settingName])
 
-    return pluginSettings
-    
-    
-  def save_settings_to_exaile(self): 
-    #List of setting names and data to save
-    toSave = [["albumName", self.builder.get_object("albumNameEntry").get_text()],
-              ["albumInFileName",  self.builder.get_object("albumInFileNameCheckbox").get_active()],
-              ["authorName", self.builder.get_object("authorNameEntry").get_text()],
-              ["outputDir", self.builder.get_object("outputDirEntry").get_text()],
-              ["outputFormat", self.convertBox.get_active_text()],
-              ["quality", str(self.qualityBox.get_active_text())]]
-              
-    for setting in toSave:
-      #0 is setting name, 1 is the data to be saved
-      print "saving setting %s" % setting[0]
-      optionPath = "/".join(("plugin", self.pluginName, setting[0]))
-      xlsettings.set_option(optionPath, setting[1])
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #

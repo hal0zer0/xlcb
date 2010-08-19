@@ -35,12 +35,12 @@ class XLCBPublisher:
     nameList = []
     path = self.settings["outputDir"]
     ext = self.FORMATS[self.settings["outputFormat"]]["extension"]
-    artist = track["artist"]
-    title = track["title"]
-    delim = "_"
+    artist = track["artist"].replace(" ","_")
+    title = track["title"].replace(" ","_")
+    delim = "-"
     nameList.append(artist)
     if self.settings["albumInFileName"]:
-      nameList.append(self.settings["albumName"])
+      nameList.append(self.settings["albumName"]).replace(" ","_")
     nameList.append(title)
     name = delim.join(nameList) + ".%s" % ext
     print "/".join([path, name])
