@@ -3,6 +3,7 @@ import pygtk
 import gtk
 import gtk.glade
 import os
+import xlcbconfig
 
 class XLCBGUI:
   def __init__(self):
@@ -18,6 +19,9 @@ class XLCBGUI:
     # For the two special combo boxes...
     self.processingTable = self.builder.get_object("processingTable")
     self._add_manual_combos()
+    
+    self.config = xlcbconfig.config
+    
     
   
   def _add_manual_combos(self):
@@ -48,6 +52,19 @@ class XLCBGUI:
   def show(self, unneeded, exaile):
     self.window.show_all()
     gtk.main()
+    
+      #def populate(self):
+    ##Set UI elements to match settings pulled from Exaile
+    #settingsDict = self.get_settings_from_exaile()
+    
+    #self.builder.get_object("albumNameEntry").set_text(settingsDict["albumName"])
+    #self.builder.get_object("albumInFileNameCheckbox").set_active(settingsDict["albumInFileName"])
+    #self.builder.get_object("authorNameEntry").set_text(settingsDict["authorName"])
+    #self.builder.get_object("outputDirEntry").set_text(settingsDict["outputDir"])
+    
+    
+    #self.update_qbox(settingsDict["outputFormat"])
+    ##self.qualityBox.
     
   #Callbacks------------------------------------------------------------------
   def cBox_cb(self, box):

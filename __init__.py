@@ -8,7 +8,7 @@ import datetime
 import xlcbpub
 import xlcbconfig
 import xlcbgui
-import xlcbformats
+
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Base functions for pluginability
@@ -43,9 +43,9 @@ class xlcb:
     
     self.finished = 0
     self.playlist = self.get_playlist()
-    self.formats = xlcbformats.get_formats()
-    configObject = xlcbconfig.Config()
-    self.settings = configObject.settings
+
+    
+    
         
   
   def get_playlist(self):
@@ -75,7 +75,7 @@ class xlcb:
     #playlist = self.get_playlist()
     self.logbox_cb(_("XLCB encodes using multiple threads.  Files may finish encoding in an order different than they started.\n\n"))
     
-    pub = xlcbpub.XLCBPublisher(self.playlist, self.get_settings_from_exaile(), self.logbox_cb, self.get_formats())
+    pub = xlcbpub.XLCBPublisher(self.playlist, self.get_settings_from_exaile(), self.logbox_cb)
     #pub.encode()
     
   def logbox_cb(self, text):

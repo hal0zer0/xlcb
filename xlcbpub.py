@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 import transcoder
+import xlcbformats
 
 class XLCBPublisher:
-  def __init__(self, playlist, settings, logbox_cb, formats):
+  def __init__(self, playlist, settings, logbox_cb):
     self.playlist = playlist
     self.settings = settings
     self.logbox_cb = logbox_cb
-    self.FORMATS = formats
+    self.formats = xlcbformats.get_formats()
     
     self.encode()
 
@@ -20,9 +21,9 @@ class XLCBPublisher:
       tc.set_output(dest)
       tc.set_format(self.settings["outputFormat"])
       #Some formats use integer quality settings, others use floats.  
-      #Since the quality settings has to be converted to strings for
+      #Since the quality setting has to be converted to strings for
       #the comboboxes, I need this try/except to convert back to 
-      #proper numberical format.  
+      #proper numerical format.  It's pretty ugly.  Improve it =)
       try:
 	tc.set_quality(int(self.settings["quality"]))
       except:
