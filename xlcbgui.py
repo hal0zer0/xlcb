@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
+from xl.nls import gettext as _
 import pygtk
 import gtk
 import gtk.glade
 import os
 import xlcbconfig
+import xlcbformats
 
 class XLCBGUI:
   def __init__(self):
@@ -19,9 +21,9 @@ class XLCBGUI:
     # For the two special combo boxes...
     self.processingTable = self.builder.get_object("processingTable")
     self._add_manual_combos()
-    
+    self.formats = xlcbformats.get_formats()
     self.config = xlcbconfig.config
-    
+    self._set_gui_from_config()
     
   
   def _add_manual_combos(self):
@@ -31,43 +33,74 @@ class XLCBGUI:
     self.processingTable.attach(self.convertBox, 5,9,1,2)
     self.convertBox.connect("changed", self.cBox_cb)
     self.qualityBox = gtk.combo_box_new_text()
-    #self.qualityBox.connect("changed", self.qbox_cb)
     self.processingTable.attach(self.qualityBox, 5,9,2,3)
-    #self.processingTable.show_all()
-    
 
-    #try:
-      #self.processingTable.remove(self.qualityBox)
-    #except:
-      #pass
-  
-  def _goButton_cb(self):
-    pass
-  
-  
-  def update_qbox(self, qualityList):
-    pass
-  
-  
+    
   def show(self, unneeded, exaile):
     self.window.show_all()
     gtk.main()
     
-      #def populate(self):
+  
+  def _set_gui_from_config(self):
     ##Set UI elements to match settings pulled from Exaile
     #settingsDict = self.get_settings_from_exaile()
+    widget = self.builder.get_object
     
-    #self.builder.get_object("albumNameEntry").set_text(settingsDict["albumName"])
-    #self.builder.get_object("albumInFileNameCheckbox").set_active(settingsDict["albumInFileName"])
-    #self.builder.get_object("authorNameEntry").set_text(settingsDict["authorName"])
-    #self.builder.get_object("outputDirEntry").set_text(settingsDict["outputDir"])
+    widget("albumNameEntry").set_text(self.config["albumName"])
+    widget("albumInFileNameCheckbox").set_active(self.config["albumInFileName"])
+    widget("authorNameEntry").set_text(self.config["authorName"])
+    widget("outputDirEntry").set_text(self.config["outputDir"])
+    #And the two special combo boxes
+    self._populate_cBox()
+    self._populate_qBox()
+    #Setting active selection to last saved.
+    self.convertBox.set_active(self._find_index_of("format", self.config["outputFormat"]))
+    #self.qualityBox.set_active(self._find_text_in_combo(self.qualityBox, self.config["quality"]))
     
     
-    #self.update_qbox(settingsDict["outputFormat"])
-    ##self.qualityBox.
+  def _find_index_of(self, whichbox, tofind):
+    if whichbox == "format":
+      i = 0
+      for format in self.formats:
+        #Please, come up with a more efficient way of finding the index # of this entry
+        if format == self.config["outputFormat"]:
+	  return i
+        else:
+	  i += 1
+    #if whichbox = "quality"
+      
+  
+  def _populate_cBox(self):
+    #Clear out existing items from quality box
+    for i in range(len(self.convertBox.get_model())):
+      self.convertBox.remove_text(0)
+    for format in self.formats:
+      self.convertBox.append_text(format)    
+
+  
+  def _populate_qBox(self):
+    for i in range(len(self.qualityBox.get_model())):
+      self.qualityBox.remove_text(0)
+    #Verify that the selected quality is legitimate
+    audioformat = self.config["outputFormat"]
+    data = self.formats[audioformat]["raw_steps"]
+    #Add items to quality box
+    for qvalue in data:
+      self.qualityBox.append_text(str(qvalue))
+      
+
+  def _refresh_qBox(self):
+    #Clear out existing items from quality box
+    for i in range(len(list(self.qualityBox.get_model()))):
+      self.qualityBox.remove_text(0)
+    self._populate_qBox()
+    
     
   #Callbacks------------------------------------------------------------------
   def cBox_cb(self, box):
     format = box.get_active_text()
     print "ConvertBox CB called, format = %s" % format
-    self.update_qbox(format)
+    self._refresh_qBox()
+    
+  def _goButton_cb(self, buttonProbably):
+    xlcbconfig.save_settings_to_exaile(self.builder, self.convertBox, self.qualityBox)

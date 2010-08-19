@@ -87,59 +87,6 @@ class xlcb:
     logbox.get_buffer().insert_at_cursor(text + "\n")
 
 
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# Dealing with the non-Glade ComboBoxes I had to add
-
-
-    
-  def convertBox_cb(self, box):
-    format = box.get_active_text()
-    print "ConvertBox CB called, format = %s" % format
-    self.update_qbox(format)
-    
-    
-
-    
-    
-  def update_qbox(self, format):
-    self.make_qbox()
-    if format in self.formats:
-      data = self.formats[format]["raw_steps"]
-    else: 
-      data = []
-    for qvalue in data:
-      self.qualityBox.append_text(str(qvalue))
-    
-    
-  def qbox_cb(self, format):
-    pass
-
-  
-
-
-
-
-
-
-
-
-
-
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# Loading and saving user settings
-
-
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# 
-
-
-    
-    
-    
-    
     
     
     

@@ -26,7 +26,7 @@ def save_settings_to_exaile(gui, cbox, qbox):
 	    
   for setting in toSave:
     #0 is setting name, 1 is the data to be saved
-    print "saving setting %s" % setting[0]
+    print "saving setting %s" % setting[0] , setting[1]
     optionPath = "/".join(("plugin", pluginName, setting[0]))
     xlsettings.set_option(optionPath, setting[1])
     
