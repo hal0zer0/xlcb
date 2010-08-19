@@ -55,7 +55,7 @@ class XLCBGUI:
     self._populate_qBox()
     #Setting active selection to last saved.
     self.convertBox.set_active(self._find_index_of("format", self.config["outputFormat"]))
-    #self.qualityBox.set_active(self._find_text_in_combo(self.qualityBox, self.config["quality"]))
+    self.qualityBox.set_active(self._find_index_of("quality", self.config["quality"]))
     
     
   def _find_index_of(self, whichbox, tofind):
@@ -63,10 +63,21 @@ class XLCBGUI:
       i = 0
       for format in self.formats:
         #Please, come up with a more efficient way of finding the index # of this entry
-        if format == self.config["outputFormat"]:
+        if format == tofind:
 	  return i
         else:
 	  i += 1
+    elif whichbox == "quality":
+      i = 0
+      format = self.convertBox.get_active_text()
+      for quality in self.formats[format]["raw_steps"]:
+	print str(quality), tofind
+	if str(quality) == tofind:
+	  return i
+	else:
+	  i += 1
+    print "No Match!  Faking it!"
+    return 0
     #if whichbox = "quality"
       
   
