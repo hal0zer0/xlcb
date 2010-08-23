@@ -6,13 +6,14 @@ import xlcbgui
 class XLCBPublisher:
   def __init__(self, exaile):
     self.playlist = self.get_playlist 
-    #self.settings = settings
-    #self.logbox_cb = logbox_cb
     self.formats = xlcbformats.get_formats()
     self.exaile = exaile
-   
-    #self.encode()
 
+
+  def show_gui(self):
+    gui = xlcbgui.XLCBGUI()
+    config = gui.show()
+    
 
   def encode(self):
     for track in self.playlist:
@@ -23,19 +24,13 @@ class XLCBPublisher:
       tc.set_output(dest)
       tc.set_format(self.settings["outputFormat"])
       #Some formats use integer quality settings, others use floats.  
-      #Since the quality setting has to be converted to strings for
-      #the comboboxes, I need this try/except to convert back to 
-      #proper numerical format.  It's pretty ugly.  Improve it =)
-      
+      #The integers have to be passed as integers, the floats as floats.  
+      #I now must read the setting and determine what it is in order
+      #to cast it properly.  I haven't found a better way.  
       if "." in self.settings["quality"]:
 	print "seems float:", self.settings["quality"]
       else:
 	print "seems int:", self.settings["quality"]
-      
-      #try:
-	#tc.set_quality(int(self.settings["quality"]))
-      #except:
-	#tc.set_quality(float(self.settings["quality"]))
       tc.start_transcode(self.settings)
       
   
@@ -53,35 +48,35 @@ class XLCBPublisher:
     nameList.append(title)
     name = delim.join(nameList) + ".%s" % ext
     print "/".join([path, name])
-    
     return "/".join([path, name])
     
-  def startBuilding(self, arg):
+  #def startBuilding(self, arg):
     # Called when Begin button clicked.  
-    self.save_settings_to_exaile()
-    self.logbox_cb(_("XLCB encodes using multiple threads.  \
-                      Files may finish encoding in an order \
-                      different than they started.\n\n"))
+    #self.save_settings_to_exaile()
+    #self.logbox_cb(_("XLCB encodes using multiple threads.  \
+                      #Files may finish encoding in an order \
+                      #different than they started.\n\n"))
     
-    pub = xlcbpub.XLCBPublisher(self.playlist, 
-                                self.get_settings_from_exaile(), 
-                                self.logbox_cb)
+    #pub = xlcbpub.XLCBPublisher(self.playlist, 
+                                #self.get_settings_from_exaile(), 
+                                #self.logbox_cb)
+                                
+
     
-  def logbox_cb(self, text):
-    logbox = self.builder.get_object("logBox")
-    # This is an ugly hack for counting the completed items
-    if "FINISHED: " in text:
-      self.finished += 1
-      logbox.get_buffer().insert_at_cursor("%i complete\n" % self.finished )
-    logbox.get_buffer().insert_at_cursor(text + "\n")
+  #def logbox_cb(self, text):
+    #logbox = self.builder.get_object("logBox")
+    ## This is an ugly hack for counting the completed items
+    #if "FINISHED: " in text:
+      #self.finished += 1
+      #logbox.get_buffer().insert_at_cursor("%i complete\n" % self.finished )
+    #logbox.get_buffer().insert_at_cursor(text + "\n")
     
   
   def get_playlist(self):
     # Reads the active playlist and converts to more easily parsed formatted
     # for the publisher
     xlcbPlaylist = []
-    raw_pl = self.exaile.gui.main.get_selected_playlist().playlist
-    
+    raw_pl = self.exaile.gui.main.get_selected_playlist().playlist    
     #Read each track, form list of dictionaries for publisher
     for raw_track in raw_pl:
       xlcbTrack = {}
@@ -98,7 +93,5 @@ class XLCBPublisher:
       xlcbPlaylist.append(xlcbTrack)
     return xlcbPlaylist
     
-  def show_gui(self):
-    gui = xlcbgui.XLCBGUI()
-    gui.show()
-    
+
+

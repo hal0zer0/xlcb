@@ -36,16 +36,12 @@ class xlcb:
     # Make basic onformation available to plugin
     self.pluginName = "XLCB"
     self.exaile = exaile
-    #self.gui = xlcbgui.XLCBGUI()
     # Add XLCB item to Tools menu
     self.MENU_ITEM = gtk.MenuItem(_('XLCB'))
     self.MENU_ITEM.connect('activate', self.menu_cb, exaile)
     exaile.gui.builder.get_object('tools_menu').append(self.MENU_ITEM)
     self.MENU_ITEM.show()
     
-    
-    self.finished = 0
-    #self.playlist = self.get_playlist()
     
   def menu_cb(self, unused, exaile):
     publisher = xlcbpub.XLCBPublisher(exaile)

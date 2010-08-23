@@ -6,6 +6,7 @@ import gtk.glade
 import os
 import xlcbconfig
 import xlcbformats
+import finalize
 
 class XLCBGUI:
   def __init__(self):
@@ -39,6 +40,7 @@ class XLCBGUI:
   def show(self):
     self.window.show_all()
     gtk.main()
+    #return self.config
     
   
   def _set_gui_from_config(self):
@@ -118,3 +120,6 @@ class XLCBGUI:
     
   def _goButton_cb(self, buttonProbably):
     xlcbconfig.save_settings_to_exaile(self.builder, self.convertBox, self.qualityBox)
+    self.config = xlcbconfig.get_settings_from_exaile()
+    finalizer = finalize.Finalizer(self.config)
+    
