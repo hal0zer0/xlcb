@@ -36,7 +36,7 @@ class XLCBGUI:
     self.processingTable.attach(self.qualityBox, 5,9,2,3)
 
     
-  def show(self, unneeded, exaile):
+  def show(self):
     self.window.show_all()
     gtk.main()
     

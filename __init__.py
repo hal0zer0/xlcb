@@ -7,84 +7,54 @@ import os
 import datetime
 import xlcbpub
 import xlcbconfig
-import xlcbgui
+#import xlcbgui
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# Base functions for pluginability
+# Base plugin stuff
 def enable(exaile):
-    if (exaile.loading):
-        event.add_callback(_enable, 'exaile_loaded')
-    else:
-        _enable(None, exaile, None)
+  """ Called by Exaile on program start """
+  if (exaile.loading):
+    event.add_callback(_enable, 'exaile_loaded')
+  else:
+    _enable(None, exaile, None)
  
 def disable(exaile):
-    print('XLCB Disabled')
+  """ Called by Exaile when plugin disabled """
+  print('XLCB Disabled')
  
 def _enable(eventname, exaile, nothing):
-    print('XLCB Loaded')
-    plugin = xlcb(exaile)
+  """ Called by Exaile when plugin enabled """ 
+  print('XLCB Loaded')
+  plugin = xlcb(exaile)
     
     
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# Actual plugin code
+# Create menu item, attach launch to xlcbpub
 class xlcb:
   def __init__(self, exaile):
     # Make basic onformation available to plugin
     self.pluginName = "XLCB"
     self.exaile = exaile
-    self.gui = xlcbgui.XLCBGUI()
+    #self.gui = xlcbgui.XLCBGUI()
     # Add XLCB item to Tools menu
     self.MENU_ITEM = gtk.MenuItem(_('XLCB'))
-    self.MENU_ITEM.connect('activate', self.gui.show, exaile)
+    self.MENU_ITEM.connect('activate', self.menu_cb, exaile)
     exaile.gui.builder.get_object('tools_menu').append(self.MENU_ITEM)
     self.MENU_ITEM.show()
     
     
     self.finished = 0
-    self.playlist = self.get_playlist()
-
+    #self.playlist = self.get_playlist()
     
+  def menu_cb(self, unused, exaile):
+    publisher = xlcbpub.XLCBPublisher(exaile)
+    publisher.show_gui()
     
-        
   
-  def get_playlist(self):
-    # Reads the active playlist and converts to more easily parsed formatted
-    # for the publisher
-    xlcbPlaylist = []
-    raw_pl = self.exaile.gui.main.get_selected_playlist().playlist
-    
-    #Read each track, form list of dictionaries for publisher
-    for raw_track in raw_pl:
-      xlcbTrack = {}
-      xlcbTrack["artist"] = raw_track.get_tag_display("artist")
-      xlcbTrack["title"] = raw_track.get_tag_display("title")
-      xlcbTrack["lengthSeconds"] = int(round(float(raw_track.get_tag_display("__length")), 0))
-      #xlcbTrack["location"]
-      #Using string slicing as an ugly hack to remove hours from formatted time
-      xlcbTrack["lengthMinutes"] = str(datetime.timedelta(seconds=xlcbTrack["lengthSeconds"]))[2:]
-      xlcbTrack["location"] = raw_track.get_tag_display("__loc")
-      #print xlcbTrack
-      xlcbPlaylist.append(xlcbTrack)
-    #print raw_track.list_tags()
-    return xlcbPlaylist
 
-  def startBuilding(self, arg):
-    # Called when Begin button clicked.  
-    self.save_settings_to_exaile()
-    #playlist = self.get_playlist()
-    self.logbox_cb(_("XLCB encodes using multiple threads.  Files may finish encoding in an order different than they started.\n\n"))
-    
-    pub = xlcbpub.XLCBPublisher(self.playlist, self.get_settings_from_exaile(), self.logbox_cb)
-    #pub.encode()
-    
-  def logbox_cb(self, text):
-    logbox = self.builder.get_object("logBox")
-    # This is an ugly hack for counting the completed items
-    if "FINISHED: " in text:
-      self.finished += 1
-      logbox.get_buffer().insert_at_cursor("%i complete\n" % self.finished )
-    logbox.get_buffer().insert_at_cursor(text + "\n")
+
+
 
 
     

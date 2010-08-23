@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 import transcoder
 import xlcbformats
+import xlcbgui
 
 class XLCBPublisher:
-  def __init__(self, playlist, settings, logbox_cb):
-    self.playlist = playlist
-    self.settings = settings
-    self.logbox_cb = logbox_cb
+  def __init__(self, exaile):
+    self.playlist = self.get_playlist 
+    #self.settings = settings
+    #self.logbox_cb = logbox_cb
     self.formats = xlcbformats.get_formats()
-    
-    self.encode()
+    self.exaile = exaile
+   
+    #self.encode()
 
 
   def encode(self):
@@ -53,4 +55,50 @@ class XLCBPublisher:
     print "/".join([path, name])
     
     return "/".join([path, name])
+    
+  def startBuilding(self, arg):
+    # Called when Begin button clicked.  
+    self.save_settings_to_exaile()
+    self.logbox_cb(_("XLCB encodes using multiple threads.  \
+                      Files may finish encoding in an order \
+                      different than they started.\n\n"))
+    
+    pub = xlcbpub.XLCBPublisher(self.playlist, 
+                                self.get_settings_from_exaile(), 
+                                self.logbox_cb)
+    
+  def logbox_cb(self, text):
+    logbox = self.builder.get_object("logBox")
+    # This is an ugly hack for counting the completed items
+    if "FINISHED: " in text:
+      self.finished += 1
+      logbox.get_buffer().insert_at_cursor("%i complete\n" % self.finished )
+    logbox.get_buffer().insert_at_cursor(text + "\n")
+    
+  
+  def get_playlist(self):
+    # Reads the active playlist and converts to more easily parsed formatted
+    # for the publisher
+    xlcbPlaylist = []
+    raw_pl = self.exaile.gui.main.get_selected_playlist().playlist
+    
+    #Read each track, form list of dictionaries for publisher
+    for raw_track in raw_pl:
+      xlcbTrack = {}
+      xlcbTrack["artist"] = raw_track.get_tag_display("artist")
+      xlcbTrack["title"] = raw_track.get_tag_display("title")
+      xlcbTrack["lengthSeconds"] = int(
+                                   round(
+                                   float(
+                                   raw_track.get_tag_display("__length")), 0))
+      #I'd love to know a better way to chop hours off.  
+      xlcbTrack["lengthMinutes"] = str(datetime.timedelta(
+                                       seconds=xlcbTrack["lengthSeconds"]))[2:]
+      xlcbTrack["location"] = raw_track.get_tag_display("__loc")
+      xlcbPlaylist.append(xlcbTrack)
+    return xlcbPlaylist
+    
+  def show_gui(self):
+    gui = xlcbgui.XLCBGUI()
+    gui.show()
     
