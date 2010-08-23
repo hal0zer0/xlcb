@@ -4,10 +4,9 @@ from xl.nls import gettext as _
 from xl import event
 import gtk
 import os
-import datetime
 import xlcbpub
 import xlcbconfig
-#import xlcbgui
+import xlcbgui
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -44,8 +43,8 @@ class xlcb:
     
     
   def menu_cb(self, unused, exaile):
-    publisher = xlcbpub.XLCBPublisher(exaile)
-    publisher.show_gui()
+    gui = xlcbgui.XLCBGUI(exaile)
+
     
   
 

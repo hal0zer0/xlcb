@@ -71,8 +71,8 @@ class TranscodeError(Exception):
     pass
 
 class Transcoder(object):
-    def __init__(self, logbox_cb, formats):
-        self.logbox_cb = logbox_cb
+    def __init__(self, formats):
+        #self.logbox_cb = logbox_cb
         #self.quality = 0.5
         self.sink = None
         self.dest_format = None
@@ -96,7 +96,7 @@ class Transcoder(object):
 	  self.quality = self.FORMATS[self.dest_format]['default']
 
     def _construct_encoder(self):
-        self.set_format(self.settings["outputFormat"])
+        #self.set_format(self.settings["outputFormat"])
         fmt = self.FORMATS[self.dest_format]
         quality = self.quality
         self.encoder = fmt["command"]%quality
@@ -113,13 +113,17 @@ class Transcoder(object):
     def set_output_raw(self, raw):
         self.output = raw
 
-    def start_transcode(self, settings):
-        self.settings = settings
+    def start_transcode(self, outputDir):
+        #self.settings = settings
         self._construct_encoder()
-        self.currentTrack = self.output.split("/").pop().strip("\"")
+        #self.currentTrack = self.output.split("/").pop()
         #self.logbox_cb("Transcoding %s" %self.currentTrack)
-        if not os.path.exists(settings["outputDir"]): 
-          os.mkdir(settings["outputDir"])
+        if not os.path.exists(outputDir): 
+          try:
+	    os.mkdir(outputDir)
+	  except Exception as err:
+	    print err
+	    print "Unable to create album output directory:", outputDir
         
         elements = [ self.input, "decodebin name=\"decoder\"", "audioconvert",
                 self.encoder, self.output ]
@@ -140,7 +144,7 @@ class Transcoder(object):
         self.pipe.set_state(gst.STATE_NULL)
         self.running = False
         self.__last_time = 0.0
-        self.logbox_cb("FINISHED: %s" %self.currentTrack)
+        #self.logbox_cb("FINISHED: %s" %self.currentTrack)
         
 
     def on_error(self, *args):

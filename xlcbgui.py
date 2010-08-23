@@ -6,10 +6,11 @@ import gtk.glade
 import os
 import xlcbconfig
 import xlcbformats
-import finalize
+import xlcbpub
 
 class XLCBGUI:
-  def __init__(self):
+  def __init__(self, exaile):
+    self.exaile = exaile
     # Load prebuilt Glade GUI and create shared object properties
     gladefile = os.path.dirname(__file__) + "/xlcbgui.glade"
     self.builder = gtk.Builder()
@@ -25,6 +26,7 @@ class XLCBGUI:
     self.formats = xlcbformats.get_formats()
     self.config = xlcbconfig.config
     self._set_gui_from_config()
+    self.show()
     
   
   def _add_manual_combos(self):
@@ -110,7 +112,19 @@ class XLCBGUI:
     #Add items to quality box
     for qvalue in data:
       self.qualityBox.append_text(str(qvalue))
+      
+  
+  def _update_pbar(self, complete, total):
+    pass
+  
+  #Running the build---------------------------------------------------------
+  def _gogogo(self):
+    pbar = self.builder.get_object("progressBar")
+    xlcbpub.begin(self.config, self.exaile, self._update_pbar)
     
+
+    
+  
     
   #Callbacks------------------------------------------------------------------
   def cBox_cb(self, box):
@@ -120,6 +134,6 @@ class XLCBGUI:
     
   def _goButton_cb(self, buttonProbably):
     xlcbconfig.save_settings_to_exaile(self.builder, self.convertBox, self.qualityBox)
-    self.config = xlcbconfig.get_settings_from_exaile()
-    finalizer = finalize.Finalizer(self.config)
+    #self.config = xlcbconfig.get_settings_from_exaile()
+    self._gogogo()
     
