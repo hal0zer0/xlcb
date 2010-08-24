@@ -35,29 +35,30 @@ class Publisher:
     return "/".join([path, name])
     
 
-  def encode(self):
-    self.total = len(self.playlist)
+  def encode(self, track):
+    self.total = self.threadCount
     tc = transcoder.Transcoder(self.FORMATS)
-    for track in self.playlist:
+    #for track in self.playlist:
       
-      source = track["location"]
-      dest = self.get_filename(track, self.config)
-      tc = transcoder.Transcoder(self.FORMATS)
-      tc.set_input(source)
-      tc.set_output(dest)
-      tc.set_format(self.config["outputFormat"])
-      #Some formats use integer quality settings, others use floats.  
-      #The integers have to be passed as integers, the floats as floats.  
-      #I now must read the setting and determine what it is in order
-      #to cast it properly.  I haven't found a better way.  
-      if "." in self.config["quality"]:
-	tc.set_quality(float(self.config["quality"]))
-      else:
-	tc.set_quality(int(self.config["quality"]))
-      
-      self.threadCount += 1
-      print "Starting encode, threadcount", self.threadCount
-      tc.start_transcode(self.config["outputDir"], self.decrement)
+    source = track["location"]
+    dest = self.get_filename(track, self.config)
+    tc = transcoder.Transcoder(self.FORMATS)
+    tc.set_input(source)
+    tc.set_output(dest)
+    tc.set_format(self.config["outputFormat"])
+    #Some formats use integer quality settings, others use floats.  
+    #The integers have to be passed as integers, the floats as floats.  
+    #I now must read the setting and determine what it is in order
+    #to cast it properly.  I haven't found a better way.  
+    if "." in self.config["quality"]:
+      tc.set_quality(float(self.config["quality"]))
+    else:
+      tc.set_quality(int(self.config["quality"]))
+    
+    self.threadCount += 1
+    print "Starting encode, threadcount", self.threadCount
+    tc.start_transcode(self.config["outputDir"], self.decrement)
+    #gobject.timeout_add(5000, self.get_playlist)
 
   def get_playlist(self):
     # Reads the active playlist and converts to more easily parsed formatted

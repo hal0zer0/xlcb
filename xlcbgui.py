@@ -123,7 +123,11 @@ class XLCBGUI:
   def _gogogo(self):
     self.pbar = self.builder.get_object("progressBar")
     pub = xlcbpub.Publisher(self.config, self.exaile, self._update_pbar)
-    pub.begin()
+    playlist = pub.get_playlist()
+    for track in playlist:
+      pub.encode(track)
+      time.sleep(2)
+    #pub.begin()
     
   
     
