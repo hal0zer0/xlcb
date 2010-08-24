@@ -115,7 +115,9 @@ class XLCBGUI:
       
   
   def _update_pbar(self, complete, total):
-    self.pbar.set_fraction(complete/total)
+    fraction = float(complete)/float(total)
+    print "fraction  =", fraction
+    self.pbar.set_fraction(fraction)
     pass
   
   
