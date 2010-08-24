@@ -113,8 +113,9 @@ class Transcoder(object):
     def set_output_raw(self, raw):
         self.output = raw
 
-    def start_transcode(self, outputDir):
+    def start_transcode(self, outputDir, decrement):
         #self.settings = settings
+        self.decrement = decrement
         self._construct_encoder()
         #self.currentTrack = self.output.split("/").pop()
         #self.logbox_cb("Transcoding %s" %self.currentTrack)
@@ -145,6 +146,8 @@ class Transcoder(object):
         self.running = False
         self.__last_time = 0.0
         #self.logbox_cb("FINISHED: %s" %self.currentTrack)
+        self.decrement()
+        
         
 
     def on_error(self, *args):

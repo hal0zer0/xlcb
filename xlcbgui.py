@@ -115,12 +115,15 @@ class XLCBGUI:
       
   
   def _update_pbar(self, complete, total):
+    self.pbar.set_fraction(complete/total)
     pass
+  
   
   #Running the build---------------------------------------------------------
   def _gogogo(self):
-    pbar = self.builder.get_object("progressBar")
-    xlcbpub.begin(self.config, self.exaile, self._update_pbar)
+    self.pbar = self.builder.get_object("progressBar")
+    pub = xlcbpub.Publisher(self.config, self.exaile, self._update_pbar)
+    pub.begin()
     
 
     
