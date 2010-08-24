@@ -25,26 +25,14 @@
 # do so. If you do not wish to do so, delete this exception statement
 # from your version.
 
-
 import pygst
 pygst.require("0.10")
 import gst
 import os
+import time
 
 from xl.nls import gettext as _
 
-"""
-    explanation of format dicts:
-    default:    the default quality to use, must be a member of raw_steps.
-    raw_steps:  a value defining the quality of encoding that will be passed
-                to the encoder.
-    kbs_steps:  a value defining the quality of encoding that will be displayed
-                to the user. must be a one-to-one mapping with raw_steps.
-    command:    the gstreamer pipeline to execute. should contain exactly one
-                %s, which will be replaced with the value from raw_steps.
-    plugins:    the gstreamer plugins needed for this transcode pipeline
-    desc:       a description of the encoder to display to the user
-"""
 
 # NOTE: the transcoder is NOT designed to transfer tags. You will need to
 # manually write the tags after transcoding has completed.
@@ -135,19 +123,16 @@ class Transcoder(object):
         self.bus.add_signal_watch()
         self.bus.connect('message::error', self.on_error)
         self.bus.connect('message::eos', self.on_eof)
-
+        self.bus
         pipe.set_state(gst.STATE_PLAYING)
         self.running = True
-        #self.runningCount += 1
         return pipe
 
     def stop(self):
         self.pipe.set_state(gst.STATE_NULL)
         self.running = False
         self.__last_time = 0.0
-        #self.logbox_cb("FINISHED: %s" %self.currentTrack)
         self.decrement()
-        
         
 
     def on_error(self, *args):

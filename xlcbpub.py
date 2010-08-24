@@ -2,6 +2,8 @@
 import transcoder
 import xlcbformats
 import datetime
+import time
+import threading
 
 class Publisher:
   def __init__(self, config, exaile, pbar_cb):
@@ -35,7 +37,9 @@ class Publisher:
 
   def encode(self):
     self.total = len(self.playlist)
+    tc = transcoder.Transcoder(self.FORMATS)
     for track in self.playlist:
+      
       source = track["location"]
       dest = self.get_filename(track, self.config)
       tc = transcoder.Transcoder(self.FORMATS)
@@ -47,17 +51,14 @@ class Publisher:
       #I now must read the setting and determine what it is in order
       #to cast it properly.  I haven't found a better way.  
       if "." in self.config["quality"]:
-	print "seems float:", self.config["quality"]
 	tc.set_quality(float(self.config["quality"]))
       else:
-	print "seems int:", self.config["quality"]
 	tc.set_quality(int(self.config["quality"]))
-
-      #while self.threadCount > 3:
-	#pass
+      
       self.threadCount += 1
       print "Starting encode, threadcount", self.threadCount
       tc.start_transcode(self.config["outputDir"], self.decrement)
+      time.sleep(1)
 
   def get_playlist(self):
     # Reads the active playlist and converts to more easily parsed formatted

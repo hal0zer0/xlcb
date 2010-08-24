@@ -7,6 +7,7 @@ import os
 import xlcbconfig
 import xlcbformats
 import xlcbpub
+import time
 
 class XLCBGUI:
   def __init__(self, exaile):
@@ -26,7 +27,9 @@ class XLCBGUI:
     self.formats = xlcbformats.get_formats()
     self.config = xlcbconfig.config
     self._set_gui_from_config()
+    self.status = self.builder.get_object("statusLabel")
     self.show()
+    
     
   
   def _add_manual_combos(self):
@@ -118,7 +121,10 @@ class XLCBGUI:
     fraction = float(complete)/float(total)
     print "fraction  =", fraction
     self.pbar.set_fraction(fraction)
-    pass
+    text = "Building playlist, %i complete" % complete
+    self.status.set_text(text)
+
+    
   
   
   #Running the build---------------------------------------------------------
@@ -138,6 +144,7 @@ class XLCBGUI:
     self._refresh_qBox()
     
   def _goButton_cb(self, buttonProbably):
+    self.status.set_text("Building playlist...")
     xlcbconfig.save_settings_to_exaile(self.builder, self.convertBox, self.qualityBox)
     #self.config = xlcbconfig.get_settings_from_exaile()
     self._gogogo()
