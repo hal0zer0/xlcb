@@ -23,9 +23,11 @@ class XLCBGUI:
     self.builder.connect_signals(buttonActions)
     # For the two special combo boxes...
     self.processingTable = self.builder.get_object("processingTable")
+    #Working with items in Glade's combo boxes is awful, so I 
+    #added two of them manually with GTK
     self._add_manual_combos()
     self.formats = xlcbformats.get_formats()
-    self.config = xlcbconfig.config
+    self.config = xlcbconfig.get_settings_from_exaile()
     self._set_gui_from_config()
     self.status = self.builder.get_object("statusLabel")
     self.show()
@@ -45,14 +47,11 @@ class XLCBGUI:
   def show(self):
     self.window.show_all()
     gtk.main()
-    #return self.config
     
   
   def _set_gui_from_config(self):
     ##Set UI elements to match settings pulled from Exaile
-    #settingsDict = self.get_settings_from_exaile()
-    widget = self.builder.get_object
-    
+    widget = self.builder.get_object    
     widget("albumNameEntry").set_text(self.config["albumName"])
     widget("albumInFileNameCheckbox").set_active(self.config["albumInFileName"])
     widget("authorNameEntry").set_text(self.config["authorName"])
@@ -68,30 +67,23 @@ class XLCBGUI:
   def _find_index_of(self, whichbox, tofind):
     #TODO: come up with a more efficient way of finding the index # of this entry
     if whichbox == "format":
-      i = 0
-      for format in self.formats:
+      for i, format in enumerate(self.formats):
         if format == tofind:
 	  return i
-        else:
-	  i += 1
     elif whichbox == "quality":
-      i = 0
       format = self.convertBox.get_active_text()
-      for quality in self.formats[format]["raw_steps"]:
+      for i, quality in enumerate(self.formats[format]["raw_steps"]):
 	print str(quality), tofind
 	if str(quality) == tofind:
 	  return i
-	else:
-	  i += 1
-    print "No Match!  Faking it!"
-    return 0
-    #if whichbox = "quality"
+    raise KeyError, "Invalid quality setting"
       
   
   def _populate_cBox(self):
     #Clear out existing items from quality box
     for i in range(len(self.convertBox.get_model())):
       self.convertBox.remove_text(0)
+    #Add new items
     for format in self.formats:
       self.convertBox.append_text(format)    
 
@@ -133,8 +125,6 @@ class XLCBGUI:
     pub = xlcbpub.Publisher(self.config, self.exaile, self._update_pbar)
     pub.begin()
     
-
-    
   
     
   #Callbacks------------------------------------------------------------------
@@ -146,6 +136,6 @@ class XLCBGUI:
   def _goButton_cb(self, buttonProbably):
     self.status.set_text("Building playlist...")
     xlcbconfig.save_settings_to_exaile(self.builder, self.convertBox, self.qualityBox)
-    #self.config = xlcbconfig.get_settings_from_exaile()
+    self.config = xlcbconfig.get_settings_from_exaile()
     self._gogogo()
     

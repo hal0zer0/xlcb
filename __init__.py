@@ -43,6 +43,7 @@ class xlcb:
     
     
   def menu_cb(self, unused, exaile):
+    # Called when the menu item is clicked.  Launch GUI.  
     gui = xlcbgui.XLCBGUI(exaile)
 
     

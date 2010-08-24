@@ -41,4 +41,4 @@ defaultSettings = {"albumName":        "XLCB Comp",
                    "outputFormat":     "FLAC",
                    "quality":          None} 
 
-config = get_settings_from_exaile()
+#config = get_settings_from_exaile()

@@ -58,7 +58,6 @@ class Publisher:
       self.threadCount += 1
       print "Starting encode, threadcount", self.threadCount
       tc.start_transcode(self.config["outputDir"], self.decrement)
-      time.sleep(1)
 
   def get_playlist(self):
     # Reads the active playlist and converts to more easily parsed formatted
