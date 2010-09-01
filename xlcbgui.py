@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 from xl.nls import gettext as _
-import pygtk
-import gtk
-import gtk.glade
-import os
-import xlcbconfig
-import xlcbformats
-import xlcbpub
-import time
+import gtk, gtk.glade
+import xlcbconfig, xlcbformats
+import threading, gobject
+import imp, os
+publisher = imp.load_source("publisher",
+        os.path.join(os.path.dirname(__file__), "xlcbpub.py"))
 
 class XLCBGUI:
   def __init__(self, exaile):
@@ -122,12 +120,10 @@ class XLCBGUI:
   #Running the build---------------------------------------------------------
   def _gogogo(self):
     self.pbar = self.builder.get_object("progressBar")
-    pub = xlcbpub.Publisher(self.config, self.exaile, self._update_pbar)
-    playlist = pub.get_playlist()
-    for track in playlist:
-      pub.encode(track)
-      time.sleep(2)
-    #pub.begin()
+    self.pub = publisher.Publisher(self.config, self.exaile)
+    encoder = EncodeThread(self.pub, self.pbar)
+    encoder.run()
+    #pub.encode()
     
   
     
@@ -143,3 +139,37 @@ class XLCBGUI:
     self.config = xlcbconfig.get_settings_from_exaile()
     self._gogogo()
     
+    
+    
+# # # # # # # # # # # # # # # # # # # # # # # # # #    
+class EncodeThread(threading.Thread):
+  def __init__(self, pub, pbar):
+    threading.Thread.__init__(self)
+    self.setDaemon(True)
+    self.pub = pub
+    self.pbar = pbar
+
+  def stop_thread(self):
+    self.pub.stop()
+
+  def _update_pbar(self, complete=0, total=0):
+    fraction = float(complete)/float(total)
+    print "fraction  =", fraction
+    self.pbar.set_fraction(fraction)
+    text = "Building playlist, %i complete" % complete
+    self.status.set_text(text)
+    
+    
+  def progress_update(self, progress=None):
+    if progress is None:
+      progress = .69
+      progress = self.imp.get_progress()*100
+      event.log_event("progress_update", self, progress)
+      return True
+
+  def run(self):
+    id = gobject.timeout_add_seconds(1, self.progress_update)
+    #self.imp.do_import()
+    self.pub.encode()
+    gobject.source_remove(id)
+    self.progress_update(100)
